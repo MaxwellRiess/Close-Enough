@@ -132,7 +132,7 @@ socket.on('game_state_change', (data) => {
             switchView('reveal');
             display.revealAnswer.textContent = data.correctAnswer;
             display.resultsList.innerHTML = data.results.map(r => `
-                <div class="result-item ${r.isCorrect ? 'correct' : 'incorrect'}">
+                <div class="result-item ${r.isCorrect ? 'correct' : 'incorrect'} ${r.isExact ? 'exact' : ''}">
                     <span class="name">${r.username}</span>
                     <span class="range">[${r.range.min} - ${r.range.max}]</span>
                     ${r.isCorrect ? `<span class="points">+${r.isExact ? '5' : (r.rangeSize === data.results.filter(res => res.isCorrect).sort((a, b) => a.rangeSize - b.rangeSize)[0]?.rangeSize ? '3' : '1')}</span>` : ''}
