@@ -239,6 +239,8 @@ button.secondary:hover {
     padding: 20px;
     width: 100%;
     border: 3px solid var(--secondary);
+    position: relative;
+    overflow: hidden;
 }
 
 .correct-answer span {
@@ -263,17 +265,17 @@ button.secondary:hover {
     padding: 15px;
     margin-bottom: 10px;
     border: 2px solid var(--secondary);
-    background: var(--bg);
+    background: #696773;
+    /* Incorrect Color */
     font-weight: bold;
-    color: var(--secondary);
-    /* Default/Incorrect is Black */
+    color: var(--bg);
 }
 
 .result-item.correct {
-    background: var(--primary);
-    /* Correct is Red */
+    background: #0F7173;
+    /* Correct Color */
     color: var(--bg);
-    border-color: var(--primary);
+    border-color: var(--secondary);
 }
 
 .result-item.correct .points {
@@ -307,6 +309,124 @@ button.secondary:hover {
 .result-item.exact .points {
     color: #fff;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+/* Accent Lines Animation */
+.accent-lines {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.accent-line {
+    position: absolute;
+    background: var(--bg);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+/* Top Left */
+.line-1 {
+    top: 20%;
+    left: 20%;
+    width: 30px;
+    height: 4px;
+    transform: rotate(-45deg);
+    animation: shake 0.5s infinite alternate;
+}
+
+/* Top Right */
+.line-2 {
+    top: 20%;
+    right: 20%;
+    width: 30px;
+    height: 4px;
+    transform: rotate(45deg);
+    animation: shake 0.6s infinite alternate-reverse;
+}
+
+/* Bottom Left */
+.line-3 {
+    bottom: 20%;
+    left: 20%;
+    width: 30px;
+    height: 4px;
+    transform: rotate(45deg);
+    animation: shake 0.7s infinite alternate;
+}
+
+/* Bottom Right */
+.line-4 {
+    bottom: 20%;
+    right: 20%;
+    width: 30px;
+    height: 4px;
+    transform: rotate(-45deg);
+    animation: shake 0.5s infinite alternate-reverse;
+}
+
+/* Sides */
+.line-5 {
+    top: 50%;
+    left: 10%;
+    width: 20px;
+    height: 4px;
+    animation: wiggle 0.4s infinite;
+}
+
+.line-6 {
+    top: 50%;
+    right: 10%;
+    width: 20px;
+    height: 4px;
+    animation: wiggle 0.4s infinite reverse;
+}
+
+@keyframes shake {
+    0% {
+        transform: translate(0, 0) rotate(var(--r, 0deg));
+    }
+
+    25% {
+        transform: translate(2px, 2px) rotate(var(--r, 0deg));
+    }
+
+    50% {
+        transform: translate(-2px, 1px) rotate(var(--r, 0deg));
+    }
+
+    75% {
+        transform: translate(1px, -2px) rotate(var(--r, 0deg));
+    }
+
+    100% {
+        transform: translate(-1px, -1px) rotate(var(--r, 0deg));
+    }
+}
+
+@keyframes wiggle {
+    0% {
+        transform: scaleX(1);
+    }
+
+    50% {
+        transform: scaleX(1.2);
+    }
+
+    100% {
+        transform: scaleX(1);
+    }
+}
+
+.correct-answer h1,
+.correct-answer span {
+    position: relative;
+    z-index: 1;
 }
 
 /* Leaderboard */
