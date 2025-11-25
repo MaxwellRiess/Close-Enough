@@ -15,20 +15,34 @@
         <!-- Views will be dynamically injected here -->
 
         <!-- WELCOME VIEW -->
-        <div id="welcome-view" class="view active">
+        <!-- LANDING VIEW -->
+        <div id="landing-view" class="view active">
             <h1 class="title">CLOSE<br>ENOUGH</h1>
-            <div class="input-group">
-                <input type="text" id="username-input" placeholder="Enter your name" maxlength="12">
-            </div>
-
             <div class="action-buttons">
-                <button id="create-btn" class="btn primary">CREATE ROOM</button>
-                <div class="divider">OR</div>
-                <div class="join-section">
-                    <input type="text" id="room-code-input" placeholder="Room Code" maxlength="4"
-                        style="text-transform: uppercase;">
-                    <button id="join-btn" class="btn secondary">JOIN ROOM</button>
-                </div>
+                <button id="to-create-btn" class="btn primary">Create room</button>
+                <button id="to-join-btn" class="btn secondary">Join room</button>
+            </div>
+        </div>
+
+        <!-- CREATE ROOM VIEW -->
+        <div id="create-room-view" class="view">
+            <h1 class="title">Close Enough</h1>
+            <div class="input-group">
+                <input type="text" id="create-username-input" placeholder="Enter your name" maxlength="12">
+            </div>
+            <button id="create-btn" class="btn primary">continue</button>
+        </div>
+
+        <!-- JOIN ROOM VIEW -->
+        <div id="join-room-view" class="view">
+            <h1 class="title">Close Enough</h1>
+            <div class="input-group">
+                <input type="text" id="join-username-input" placeholder="Enter your name" maxlength="12">
+            </div>
+            <div class="join-inputs">
+                <input type="text" id="room-code-input" placeholder="room code" maxlength="4"
+                    style="text-transform: uppercase;">
+                <button id="join-btn" class="btn primary">continue</button>
             </div>
         </div>
 

@@ -2,7 +2,9 @@ const socket = io();
 
 // DOM Elements
 const views = {
-    welcome: document.getElementById('welcome-view'),
+    landing: document.getElementById('landing-view'),
+    createRoom: document.getElementById('create-room-view'),
+    joinRoom: document.getElementById('join-room-view'),
     lobby: document.getElementById('lobby-view'),
     question: document.getElementById('question-view'),
     reveal: document.getElementById('reveal-view'),
@@ -10,13 +12,16 @@ const views = {
 };
 
 const inputs = {
-    username: document.getElementById('username-input'),
+    createUsername: document.getElementById('create-username-input'),
+    joinUsername: document.getElementById('join-username-input'),
     roomCode: document.getElementById('room-code-input'),
     min: document.getElementById('min-input'),
     max: document.getElementById('max-input')
 };
 
 const buttons = {
+    toCreate: document.getElementById('to-create-btn'),
+    toJoin: document.getElementById('to-join-btn'),
     create: document.getElementById('create-btn'),
     join: document.getElementById('join-btn'),
     start: document.getElementById('start-btn'),
@@ -44,8 +49,16 @@ function switchView(viewName) {
 }
 
 // Event Listeners
+buttons.toCreate.addEventListener('click', () => {
+    switchView('createRoom');
+});
+
+buttons.toJoin.addEventListener('click', () => {
+    switchView('joinRoom');
+});
+
 buttons.create.addEventListener('click', () => {
-    const username = inputs.username.value.trim();
+    const username = inputs.createUsername.value.trim();
     if (username) {
         myUsername = username;
         socket.emit('create_room', { username });
@@ -55,7 +68,7 @@ buttons.create.addEventListener('click', () => {
 });
 
 buttons.join.addEventListener('click', () => {
-    const username = inputs.username.value.trim();
+    const username = inputs.joinUsername.value.trim();
     const roomId = inputs.roomCode.value.trim().toUpperCase();
 
     if (username && roomId) {
