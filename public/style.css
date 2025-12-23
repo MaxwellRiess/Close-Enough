@@ -283,18 +283,6 @@ button.secondary:hover {
     text-shadow: none;
 }
 
-.result-item.correct-secondary {
-    background: #2A9D8F;
-    /* Muted Teal for 1 point */
-    color: var(--bg);
-    border-color: var(--secondary);
-}
-
-.result-item.correct-secondary .points {
-    color: var(--bg);
-    text-shadow: none;
-}
-
 /* Exact Answer Animation */
 .result-item.exact {
     background: linear-gradient(45deg, #8e44ad, #9b59b6, #e056fd, #8e44ad);
@@ -475,37 +463,11 @@ button.secondary:hover {
 
 /* End View */
 #winner-display {
-    font-size: 4rem;
+    font-size: 3rem;
     color: var(--primary);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     text-align: center;
     font-family: var(--font-heading);
-    animation: bounce 1s infinite alternate;
-}
-
-@keyframes bounce {
-    from {
-        transform: translateY(0);
-    }
-
-    to {
-        transform: translateY(-10px);
-    }
-}
-
-/* Confetti */
-.confetti {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: var(--accent);
-    animation: fall linear forwards;
-}
-
-@keyframes fall {
-    to {
-        transform: translateY(100vh) rotate(720deg);
-    }
 }
 
 /* Utilities */

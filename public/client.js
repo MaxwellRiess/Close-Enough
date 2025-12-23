@@ -145,10 +145,10 @@ socket.on('game_state_change', (data) => {
             switchView('reveal');
             display.revealAnswer.textContent = data.correctAnswer;
             display.resultsList.innerHTML = data.results.map(r => `
-                <div class="result-item ${r.isCorrect ? (r.points > 1 ? 'correct' : 'correct-secondary') : 'incorrect'} ${r.isExact ? 'exact' : ''}">
+                <div class="result-item ${r.isCorrect ? 'correct' : 'incorrect'} ${r.isExact ? 'exact' : ''}">
                     <span class="name">${r.username}</span>
                     <span class="range">[${r.range.min} - ${r.range.max}]</span>
-                    ${r.isCorrect ? `<span class="points">+${r.points}</span>` : ''}
+                    ${r.isCorrect ? `<span class="points">+${r.isExact ? '5' : (r.rangeSize === data.results.filter(res => res.isCorrect).sort((a, b) => a.rangeSize - b.rangeSize)[0]?.rangeSize ? '3' : '1')}</span>` : ''}
                 </div>
             `).join('');
 
@@ -171,8 +171,7 @@ socket.on('game_state_change', (data) => {
             break;
         case 'END':
             switchView('end');
-            const winnerHtml = data.winner ? `<div id="winner-display">WINNER: ${data.winner.username}</div>` : '';
-            display.finalScores.innerHTML = winnerHtml + data.players
+            display.finalScores.innerHTML = data.players
                 .sort((a, b) => b.score - a.score)
                 .map((p, i) => `
                     <div class="final-score-item">
@@ -181,29 +180,9 @@ socket.on('game_state_change', (data) => {
                         <span class="score">${p.score} pts</span>
                     </div>
                 `).join('');
-
-            if (data.winner) {
-                createConfetti();
-            }
             break;
     }
 });
-
-function createConfetti() {
-    const colors = ['#D93025', '#D4AF37', '#2A9D8F', '#F2F0E9'];
-    for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.classList.add('confetti');
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        document.body.appendChild(confetti);
-
-        setTimeout(() => {
-            confetti.remove();
-        }, 5000);
-    }
-}
 
 socket.on('answers_progress', (data) => {
     display.statusMsg.textContent = `Answer submitted! (${data.current}/${data.total} players ready)`;
