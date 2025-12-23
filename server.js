@@ -61,11 +61,19 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('submit_answer', ({ min, max }) => {
+    socket.on('submit_answer', ({ min, max, ability, target }) => {
         const roomId = playerRooms.get(socket.id);
         const gameManager = rooms.get(roomId);
         if (gameManager) {
-            gameManager.submitAnswer(socket.id, min, max);
+            gameManager.submitAnswer(socket.id, min, max, ability, target);
+        }
+    });
+
+    socket.on('next_question', () => {
+        const roomId = playerRooms.get(socket.id);
+        const gameManager = rooms.get(roomId);
+        if (gameManager) {
+            gameManager.nextQuestionManual(socket.id);
         }
     });
 

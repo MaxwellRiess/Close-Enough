@@ -74,7 +74,29 @@
                     <input type="number" id="max-input" placeholder="Max">
                 </div>
             </div>
-            <button id="submit-btn" class="btn primary">CONFIRM RANGE</button>
+            <!-- ABILITY CONTROLS (Initially Hidden or shown based on availability) -->
+            <div id="ability-controls">
+                <p class="section-label">ABILITIES</p>
+                <div class="ability-buttons">
+                    <button class="ability-btn" data-ability="COPY" id="btn-copy">📋 COPY</button>
+                    <button class="ability-btn" data-ability="DOUBLE" id="btn-double">2️⃣ DOUBLE</button>
+                    <button class="ability-btn" data-ability="SWAP" id="btn-swap">🔄 SWAP</button>
+                </div>
+
+                <!-- Targets Selection -->
+                <div id="ability-targets" style="display: none;">
+                    <p id="target-instruction">Select Player:</p>
+                    <select id="target-select-1" class="target-select">
+                        <option value="">Choose...</option>
+                    </select>
+                    <select id="target-select-2" class="target-select" style="display: none;">
+                        <option value="">Choose...</option>
+                    </select>
+                    <button id="cancel-ability-btn" class="btn small">Cancel</button>
+                </div>
+            </div>
+
+            <button id="submit-btn" class="btn primary">CONFIRM</button>
             <p id="status-msg"></p>
         </div>
 
@@ -94,6 +116,8 @@
             </div>
             <div id="results-list" class="results-container"></div>
             <div id="reveal-leaderboard" class="leaderboard-container"></div>
+            <button id="next-question-btn" class="btn primary" style="display: none; margin-top: 20px;">NEXT
+                QUESTION</button>
         </div>
 
         <!-- END VIEW -->

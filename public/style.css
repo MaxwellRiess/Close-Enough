@@ -159,6 +159,18 @@ button.secondary:hover {
     box-shadow: 4px 4px 0px var(--primary);
 }
 
+.result-item.correct-secondary {
+    background: #2A9D8F;
+    /* Muted Teal for 1 point */
+    color: var(--bg);
+    border-color: var(--secondary);
+}
+
+.result-item.correct-secondary .points {
+    color: var(--bg);
+    text-shadow: none;
+}
+
 /* Lobby */
 .room-info {
     margin-bottom: 40px;
@@ -463,11 +475,37 @@ button.secondary:hover {
 
 /* End View */
 #winner-display {
-    font-size: 3rem;
+    font-size: 4rem;
     color: var(--primary);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     text-align: center;
     font-family: var(--font-heading);
+    animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+/* Confetti */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: var(--accent);
+    animation: fall linear forwards;
+}
+
+@keyframes fall {
+    to {
+        transform: translateY(100vh) rotate(720deg);
+    }
 }
 
 /* Utilities */
@@ -497,4 +535,121 @@ button.secondary:hover {
 .join-inputs button {
     width: 50%;
     margin-bottom: 0;
+}
+
+/* Ability Buttons */
+.section-label {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--secondary);
+}
+
+.ability-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ability-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.9rem;
+    background: transparent;
+    border: 3px solid var(--secondary);
+    color: var(--secondary);
+    opacity: 0.5;
+    /* Default dim when not selected */
+    transition: all 0.2s ease;
+}
+
+.ability-btn:disabled,
+.ability-btn.used {
+    background: #ccc;
+    border-color: #ccc;
+    color: #888;
+    pointer-events: none;
+    text-decoration: line-through;
+    opacity: 0.3;
+}
+
+.ability-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    opacity: 0.8;
+}
+
+.ability-btn.selected {
+    opacity: 1;
+    color: var(--bg);
+    box-shadow: 2px 2px 0px var(--secondary);
+    transform: translate(-2px, -2px);
+}
+
+/* Specific Ability Colors when Selected */
+#btn-copy.selected {
+    background: #2A9D8F;
+    border-color: #2A9D8F;
+}
+
+/* Teal */
+#btn-double.selected {
+    background: #D4AF37;
+    border-color: #D4AF37;
+}
+
+/* Gold */
+#btn-swap.selected {
+    background: #D93025;
+    border-color: #D93025;
+}
+
+/* Red */
+
+/* Targets UI */
+#ability-targets {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#target-instruction {
+    display: none;
+    /* Hide label to save space, redundant with placeholder */
+}
+
+.target-select {
+    flex-grow: 1;
+    padding: 10px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: bold;
+    border: 3px solid var(--secondary);
+    background: transparent;
+    color: var(--secondary);
+    border-radius: 0;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+}
+
+#cancel-ability-btn {
+    width: auto;
+    padding: 10px 15px;
+    font-size: 1rem;
+    background: transparent;
+    border: 3px solid var(--secondary);
+    color: var(--secondary);
+    margin-bottom: 0;
+    transition: all 0.2s ease;
+}
+
+#cancel-ability-btn:hover {
+    background: var(--secondary);
+    color: var(--bg);
 }

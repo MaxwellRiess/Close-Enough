@@ -4,6 +4,11 @@ class Player {
         this.username = username;
         this.score = 0;
         this.currentRange = null; // { min: number, max: number }
+        this.abilities = {
+            COPY: true,
+            DOUBLE: true,
+            SWAP: true
+        };
     }
 }
 

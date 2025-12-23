@@ -75,7 +75,7 @@ const QUESTIONS = [
     { text: "What is the number of grooves on a vinyl record per side?", answer: 1 },
     { text: "How many minutes does it take sunlight to reach Earth?", answer: 8 },
     { text: "How many bones are in a horse's skeleton?", answer: 205 },
-    { text: "How many thousands of distinct characters are in the Chinese language (approx)?", answer: 50 },
+    { text: "How many distinct characters are in the Chinese language (approx)?", answer: 50000 },
     { text: "What is the length of the Amazon River in miles?", answer: 4000 },
     { text: "How many dimples are on a standard Titleist Pro V1 golf ball?", answer: 388 },
     { text: "How many times does a fly beat its wings per second?", answer: 200 },
@@ -160,7 +160,7 @@ const QUESTIONS = [
     { text: "How many litres of water does a camel's hump hold?", answer: 0 },
     { text: "How many distinct languages are spoken in Papua New Guinea?", answer: 840 },
     { text: "How many kilograms does the world's heaviest pumpkin weigh?", answer: 1226 },
-    { text: "How many thousands of pieces of mail does the Royal Mail handle per second (approx)?", answer: 1 },
+    { text: "How many pieces of mail does the Royal Mail handle per second (approx)?", answer: 1000 },
     { text: "How many miles is the length of the Nile River?", answer: 4130 },
     { text: "How many distinct bones are in a T-Rex skeleton?", answer: 300 },
     { text: "How many thousands of litres of water flow over Niagara Falls per second?", answer: 2400 },
@@ -249,7 +249,8 @@ class GameManager {
         this.gameState = 'LOBBY'; // LOBBY, QUESTION, REVEAL, END
         this.currentQuestionIndex = 0;
         this.currentQuestion = null;
-        this.answers = new Map(); // socketId -> { min, max }
+        this.currentQuestion = null;
+        this.answers = new Map(); // socketId -> { min, max, ability, target }
         this.shuffledQuestions = [];
     }
 
@@ -298,15 +299,38 @@ class GameManager {
         });
     }
 
-    submitAnswer(socketId, min, max) {
+    submitAnswer(socketId, min, max, ability = null, target = null) {
         if (this.gameState !== 'QUESTION') return;
 
         // Validate input
-        min = parseFloat(min);
-        max = parseFloat(max);
-        if (isNaN(min) || isNaN(max)) return;
+        if (ability === 'COPY') {
+            // No min/max needed, just target
+            if (!target) return;
+        } else if (ability === 'SWAP') {
+            // Needs min/max AND target (which might be an array or object in client, let's assume target is {p1, p2} from client or just handling logic here? 
+            // Plan said: "Swap Player A and Player B", but usually user targets 1 person.
+            // Let's assume user picks 2 people to swap. 
+            // For simple SWAP implementation where player swaps THEMSELVES with another? Or arbitrary 2?
+            // Requirement: "they can swap two players answers". Implies arbitrary.
+            // So target should be array of 2 socketIds? 
+            // Let's assume target is provided. 
+            min = parseFloat(min);
+            max = parseFloat(max);
+            if (isNaN(min) || isNaN(max)) return;
+        } else {
+            // Standard or DOUBLE
+            min = parseFloat(min);
+            max = parseFloat(max);
+            if (isNaN(min) || isNaN(max)) return;
+        }
 
-        this.answers.set(socketId, { min, max });
+        // Check if player has ability
+        const player = this.players.get(socketId);
+        if (ability && !player.abilities[ability]) {
+            return; // Configuring cheat/bug protection
+        }
+
+        this.answers.set(socketId, { min, max, ability, target });
 
         // Check if all players answered
         if (this.answers.size === this.players.size) {
@@ -323,27 +347,101 @@ class GameManager {
     revealResults() {
         this.gameState = 'REVEAL';
         const correctAnswer = this.currentQuestion.answer;
-        const results = [];
 
-        // Calculate scores
-        // 1. Determine who is correct (answer within range)
-        // 2. Among correct, who has smallest range
 
+
+        // Re-construct a mutable map of "What is at this slot"
+        let slotContents = new Map(); // socketId -> AnswerObject
+        for (const [id, ans] of this.answers) {
+            slotContents.set(id, { ...ans });
+        }
+
+        // EXECUTE SWAPS
+        console.log("Initial Answers:", this.answers);
+        for (const [id, startAns] of this.answers) {
+            if (startAns.ability === 'SWAP' && startAns.target && startAns.target.length === 2) {
+                const t1 = startAns.target[0];
+                const t2 = startAns.target[1];
+                console.log(`Executing SWAP by ${id} between ${t1} and ${t2}`);
+
+                const content1 = slotContents.get(t1);
+                const content2 = slotContents.get(t2);
+
+                if (content1 && content2) {
+                    slotContents.set(t1, content2);
+                    slotContents.set(t2, content1);
+                } else {
+                    console.log("Swap failed: invalid targets or missing content");
+                }
+            }
+        }
+
+        // RESOLVE VALUES (Handle Copies)
+        // Now we look at what is in each slot and resolve numbers
+        let resolvedValues = new Map(); // socketId -> { min, max }
+
+        // Helper to resolve chain
+        const resolvePlayer = (pid, visited = new Set()) => {
+            if (visited.has(pid)) return null; // Cycle detected
+            visited.add(pid);
+
+            const content = slotContents.get(pid);
+            if (!content) return null; // Should not happen
+
+            if (content.ability === 'COPY' && content.target) {
+                // Determine target ID (content.target is single ID string)
+                return resolvePlayer(content.target, visited);
+            } else {
+                // Valid numbers?
+                if (content.min !== undefined && content.max !== undefined) {
+                    return { min: content.min, max: content.max };
+                }
+                return null;
+            }
+        };
+
+        // Resolve everyone
+        for (const pid of this.players.keys()) {
+            if (!slotContents.has(pid)) {
+                // Player didn't answer?
+                continue;
+            }
+            const val = resolvePlayer(pid);
+            if (val) {
+                resolvedValues.set(pid, val);
+            }
+        }
+
+        // SCORING
+        const resultsMap = new Map(); // socketId -> result object
         let correctPlayers = [];
 
-        for (const [socketId, range] of this.answers) {
+        // Identify ability usage for display
+        const abilityUsage = new Map();
+        for (const [id, ans] of this.answers) {
+            if (ans.ability) {
+                abilityUsage.set(id, ans.ability);
+            }
+        }
+
+        for (const [socketId, range] of resolvedValues) {
             const player = this.players.get(socketId);
+            const originalAns = this.answers.get(socketId); // To check for DOUBLE ability usage
+
             const isCorrect = correctAnswer >= range.min && correctAnswer <= range.max;
             const rangeSize = range.max - range.min;
-            const isExact = isCorrect && range.min === range.max; // Or rangeSize === 0
+            const isExact = isCorrect && range.min === range.max;
 
-            results.push({
+            const resultObj = {
                 username: player.username,
                 range: range,
                 isCorrect: isCorrect,
                 rangeSize: rangeSize,
-                isExact: isExact
-            });
+                isExact: isExact,
+                points: 0,
+                ability: abilityUsage.get(socketId) // Pass ability to frontend
+            };
+            resultsMap.set(socketId, resultObj);
 
             if (isCorrect) {
                 correctPlayers.push({ socketId, rangeSize, isExact });
@@ -359,25 +457,65 @@ class GameManager {
         // Others correct: 1 point
 
         if (correctPlayers.length > 0) {
-            const bestPlayer = correctPlayers[0];
             const bestRangeSize = correctPlayers[0].rangeSize;
 
             for (const p of correctPlayers) {
                 const player = this.players.get(p.socketId);
+                let points = 0;
 
-                if (p.rangeSize === bestRangeSize) {
-                    // This is a winner
-                    if (p.isExact) {
-                        player.score += 5;
-                    } else {
-                        player.score += 3;
-                    }
+                // Logic: 
+                // Exact -> 5
+                // Best range (but not exact) -> 3
+                // Other correct -> 1
+
+                if (p.isExact) {
+                    points = 5;
+                } else if (p.rangeSize === bestRangeSize) {
+                    points = 3;
                 } else {
-                    // Runner up
-                    player.score += 1;
+                    points = 1;
+                }
+
+                // Apply DOUBLE
+                const originalAns = this.answers.get(p.socketId);
+                console.log(`Scoring for ${player.username} (${p.socketId}): Base Points: ${points}`);
+                if (originalAns) {
+                    console.log(`Original Answer for ${player.username}:`, originalAns);
+                }
+
+                // Note: If I was SWAPPED, do I keep my DOUBLE multiplier?
+                // Usually abilities are personal. "I play Double". My score is doubled.
+                // Even if my answer was swapped away, whatever score I get with my *new* answer is doubled.
+                if (originalAns && originalAns.ability === 'DOUBLE') {
+                    console.log(`Applying DOUBLE for ${player.username}`);
+                    points *= 2;
+                }
+
+                console.log(`Final Points for ${player.username}: ${points}`);
+
+                player.score += points;
+
+                // Update result object
+                const resultObj = resultsMap.get(p.socketId);
+                if (resultObj) {
+                    resultObj.points = points;
                 }
             }
         }
+
+
+
+        // Consume Abilities
+        for (const [id, ans] of this.answers) {
+            if (ans.ability) {
+                const player = this.players.get(id);
+                if (player.abilities[ans.ability]) {
+                    player.abilities[ans.ability] = false;
+                }
+            }
+        }
+
+        const results = Array.from(resultsMap.values());
 
         this.io.to(this.roomId).emit('game_state_change', {
             state: 'REVEAL',
@@ -386,27 +524,52 @@ class GameManager {
             players: Array.from(this.players.values()) // Send updated scores
         });
 
-        // Wait 5 seconds then next question
-        setTimeout(() => {
-            this.currentQuestionIndex++;
-            this.nextQuestion();
-        }, 8000);
+        // Check for winner
+        const WINNING_SCORE = 15;
+        let winner = null;
+        // Find player with highest score >= 15
+        const potentialWinners = Array.from(this.players.values()).filter(p => p.score >= WINNING_SCORE);
+        if (potentialWinners.length > 0) {
+            potentialWinners.sort((a, b) => b.score - a.score);
+            winner = potentialWinners[0];
+        }
+
+        if (winner) {
+            setTimeout(() => {
+                this.endGame(winner);
+            }, 8000);
+        } else {
+            // Next question manual advance
+            // Timer removed
+        }
     }
 
-    endGame() {
+    nextQuestionManual(socketId) {
+        // Validation: Is this player the host? (First player in map)
+        const hostId = this.players.keys().next().value;
+        if (socketId !== hostId) return;
+
+        if (this.gameState === 'REVEAL') {
+            this.currentQuestionIndex++;
+            this.nextQuestion();
+        }
+    }
+
+    endGame(winner) {
         this.gameState = 'END';
         this.io.to(this.roomId).emit('game_state_change', {
             state: 'END',
-            players: Array.from(this.players.values())
+            players: Array.from(this.players.values()),
+            winner: winner
         });
 
-        // Reset for next game after delay?
+        // Reset for next game after delay
         setTimeout(() => {
             this.gameState = 'LOBBY';
             this.players.forEach(p => p.score = 0);
             this.io.to(this.roomId).emit('game_state_change', { state: 'LOBBY' });
             this.io.to(this.roomId).emit('update_player_list', Array.from(this.players.values()));
-        }, 10000);
+        }, 15000); // Longer delay for celebration
     }
 }
 
