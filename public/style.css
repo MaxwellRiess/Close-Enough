@@ -555,10 +555,10 @@ button.secondary:hover {
 
 .ability-btn {
     flex: 1;
-    padding: 10px;
-    font-size: 0.9rem;
+    padding: 6px 4px;
+    font-size: 0.8rem;
     background: transparent;
-    border: 3px solid var(--secondary);
+    border: 2px solid var(--secondary);
     color: var(--secondary);
     opacity: 0.5;
     /* Default dim when not selected */
