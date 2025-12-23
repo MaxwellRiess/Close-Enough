@@ -239,6 +239,55 @@ const QUESTIONS = [
     { text: "How many thousands of people can be seated at Wembley Stadium?", answer: 90 },
     { text: "How many millions of copies of 'Thriller' by Michael Jackson have been sold?", answer: 70 },
     { text: "How many metres tall is The Shard in London?", answer: 310 }
+    { text: "How many strings are on a standard concert grand harp?", answer: 47 },
+    { text: "What is the maximum number of people that can fit in a standard London double-decker bus?", answer: 80 },
+    { text: "How many thousands of light-years across is the Milky Way galaxy?", answer: 100 },
+    { text: "How many petals are on a typical field daisy?", answer: 34 },
+    { text: "How many distinct islands make up the state of Hawaii?", answer: 137 },
+    { text: "How many millions of Lego minifigures are produced every year?", answer: 400 },
+    { text: "What is the average number of grapes required to make a bottle of wine?", answer: 600 },
+    { text: "How many kilograms of pressure can a crocodile's jaw exert per square inch?", answer: 3700 },
+    { text: "How many minutes long is the extended edition of 'The Return of the King'?", answer: 263 },
+    { text: "How many thousands of hairs are in a sea otter's fur per square inch?", answer: 1000 },
+    { text: "What is the maximum number of players allowed on a Quidditch team (in the books)?", answer: 7 },
+    { text: "How many distinct keys are on a standard computer keyboard (US layout)?", answer: 104 },
+    { text: "How many litres of air can a human lung hold on average?", answer: 6 },
+    { text: "How many thousands of miles is the total length of the US Interstate Highway System?", answer: 48 },
+    { text: "How many distinct elements on the Periodic Table occur naturally?", answer: 94 },
+    { text: "How many years does it take for a glass bottle to decompose in a landfill (in thousands)?", answer: 4000 },
+    { text: "What is the height of a regulation NBA basketball hoop in feet?", answer: 10 },
+    { text: "How many distinct species of owls exist worldwide?", answer: 200 },
+    { text: "How many hundreds of millions of years ago did the first dinosaurs appear?", answer: 230 },
+    { text: "How many distinct segments make up an earthworm's body (approx)?", answer: 150 },
+    { text: "How many thousands of tons did the RMS Titanic weigh?", answer: 52 },
+    { text: "What is the average number of words in a English language novel?", answer: 90000 },
+    { text: "How many distinct characters are in the alphabet used for the Hawaiian language?", answer: 13 },
+    { text: "How many kilograms of pressure is the human jaw capable of exerting?", answer: 70 },
+    { text: "How many distinct locations are on a standard Monopoly board?", answer: 40 },
+    { text: "How many thousands of years old is the Great Sphinx of Giza (estimated)?", answer: 4 },
+    { text: "How many distinct valves are in a standard trumpet?", answer: 3 },
+    { text: "How many millions of tons of plastic enter the ocean every year?", answer: 8 },
+    { text: "How many distinct species of jellyfish are there?", answer: 2000 },
+    { text: "How many kilograms does a standard 'checked' suitcase weigh at its maximum limit (typical)?", answer: 23 }
+    { text: "How many strings are on a standard cello?", answer: 4 },
+    { text: "How many minutes long is the 'I Have a Dream' speech by Martin Luther King Jr.?", answer: 17 },
+    { text: "How many millions of dollars was the budget for the original 1977 Star Wars?", answer: 11 },
+    { text: "How many distinct animated feature films has Disney released (up to Wish)?", answer: 62 },
+    { text: "How many years did it take to film the movie 'Boyhood'?", answer: 12 },
+    { text: "How many distinct keys are on a standard grand piano?", answer: 88 },
+    { text: "How many episodes of 'Friends' were produced in total?", answer: 236 },
+    { text: "How many distinct films did Alfred Hitchcock direct?", answer: 52 },
+    { text: "How many strings are on a standard ukulele?", answer: 4 },
+    { text: "How many minutes long is the record-breaking music video for 'Thriller'?", answer: 14 },
+    { text: "How many distinct actors have played Batman in live-action theatrical films?", answer: 9 },
+    { text: "How many seasons did the original 'Star Trek' series run for?", answer: 3 },
+    { text: "How many millions of copies has 'Grand Theft Auto V' sold (approx)?", answer: 190 },
+    { text: "How many distinct players are on the field at once in a Quidditch match?", answer: 14 },
+    { text: "How many minutes long is the shortest Best Picture winner ('Marty')?", answer: 90 },
+    { text: "How many distinct categories are awarded at the main Oscars ceremony?", answer: 23 },
+    { text: "How many millions of dollars did it cost to make the 1997 movie 'Titanic'?", answer: 200 },
+    { text: "How many distinct colors are in the official Google logo?", answer: 4 },
+    { text: "How many years old was Shirley Temple when she won her first (honorary) Oscar?", answer: 6 },
 ];
 
 class GameManager {
@@ -326,27 +375,25 @@ class GameManager {
         const results = [];
 
         // Calculate scores
-        // 1. Determine who is correct (answer within range)
-        // 2. Among correct, who has smallest range
-
         let correctPlayers = [];
 
         for (const [socketId, range] of this.answers) {
             const player = this.players.get(socketId);
             const isCorrect = correctAnswer >= range.min && correctAnswer <= range.max;
             const rangeSize = range.max - range.min;
-            const isExact = isCorrect && range.min === range.max; // Or rangeSize === 0
+            const isExact = isCorrect && range.min === range.max;
 
             results.push({
                 username: player.username,
                 range: range,
                 isCorrect: isCorrect,
                 rangeSize: rangeSize,
-                isExact: isExact
+                isExact: isExact,
+                points: 0 // Will be updated
             });
 
             if (isCorrect) {
-                correctPlayers.push({ socketId, rangeSize, isExact });
+                correctPlayers.push({ socketId, rangeSize, isExact, resultIndex: results.length - 1 });
             }
         }
 
@@ -354,28 +401,27 @@ class GameManager {
         correctPlayers.sort((a, b) => a.rangeSize - b.rangeSize);
 
         // Award points
-        // Exact answer: 5 points
-        // Smallest range (if not exact): 3 points
-        // Others correct: 1 point
-
         if (correctPlayers.length > 0) {
-            const bestPlayer = correctPlayers[0];
             const bestRangeSize = correctPlayers[0].rangeSize;
 
             for (const p of correctPlayers) {
                 const player = this.players.get(p.socketId);
+                let points = 0;
 
                 if (p.rangeSize === bestRangeSize) {
-                    // This is a winner
+                    // Best range
                     if (p.isExact) {
-                        player.score += 5;
+                        points = 5;
                     } else {
-                        player.score += 3;
+                        points = 3;
                     }
                 } else {
                     // Runner up
-                    player.score += 1;
+                    points = 1;
                 }
+
+                player.score += points;
+                results[p.resultIndex].points = points;
             }
         }
 
@@ -383,30 +429,47 @@ class GameManager {
             state: 'REVEAL',
             correctAnswer: correctAnswer,
             results: results,
-            players: Array.from(this.players.values()) // Send updated scores
-        });
-
-        // Wait 5 seconds then next question
-        setTimeout(() => {
-            this.currentQuestionIndex++;
-            this.nextQuestion();
-        }, 8000);
-    }
-
-    endGame() {
-        this.gameState = 'END';
-        this.io.to(this.roomId).emit('game_state_change', {
-            state: 'END',
             players: Array.from(this.players.values())
         });
 
-        // Reset for next game after delay?
+        // Check for winner
+        const WINNING_SCORE = 15;
+        let winner = null;
+        // Find player with highest score >= 15
+        const potentialWinners = Array.from(this.players.values()).filter(p => p.score >= WINNING_SCORE);
+        if (potentialWinners.length > 0) {
+            potentialWinners.sort((a, b) => b.score - a.score);
+            winner = potentialWinners[0];
+        }
+
+        if (winner) {
+            setTimeout(() => {
+                this.endGame(winner);
+            }, 8000);
+        } else {
+            // Next question
+            setTimeout(() => {
+                this.currentQuestionIndex++;
+                this.nextQuestion();
+            }, 8000);
+        }
+    }
+
+    endGame(winner) {
+        this.gameState = 'END';
+        this.io.to(this.roomId).emit('game_state_change', {
+            state: 'END',
+            players: Array.from(this.players.values()),
+            winner: winner
+        });
+
+        // Reset for next game after delay
         setTimeout(() => {
             this.gameState = 'LOBBY';
             this.players.forEach(p => p.score = 0);
             this.io.to(this.roomId).emit('game_state_change', { state: 'LOBBY' });
             this.io.to(this.roomId).emit('update_player_list', Array.from(this.players.values()));
-        }, 10000);
+        }, 15000); // Longer delay for celebration
     }
 }
 
